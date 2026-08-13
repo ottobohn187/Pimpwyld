@@ -420,13 +420,14 @@ static void show_street_attack_art(void) {
 static void show_mugging_art(void) {
     clear_screen();
     event_border(RED, "HOLD-UP", 1);
-    event_art_row(BLUE,    "          ▄████▄                                      ▄██▄", 78);
-    event_art_row(WHITE,   "         █ ▄  ▄ █                                    █▀▀█", 78);
-    event_art_row(RED,     "         █  ▀▀  █        ╔══════════════════╗       █YOU█", 78);
-    event_art_row(MAGENTA, "       ▄██████████▄      ═╣  GIVE IT UP!     ╠══►  ▄████▄", 78);
-    event_art_row(CYAN,    "      ██  ██  ██  ██      ╚══════════════════╝     ██ ██ ██", 78);
-    event_art_row(YELLOW,  "           $  $  $                 CASH OR 20 STATUS", 78);
-    event_row(WHITE,   "STATUS OR CASH — DECIDE FAST");
+    event_art_row(RED,     "        .-------.                                      \\O/", 78);
+    event_art_row(WHITE,   "       /  o   o  \\                                      |", 78);
+    event_art_row(RED,     "       |    ^    |__                                    YOU", 78);
+    event_art_row(MAGENTA, "       \\  '---'  /  \\_____[===========>              / \\", 78);
+    event_art_row(CYAN,    "        '---.---'        GIVE IT UP!", 78);
+    event_art_row(CYAN,    "           /|\\", 78);
+    event_art_row(YELLOW,  "          / | \\              CASH OR 20 STATUS", 78);
+    event_art_row(WHITE,   "           / \\               DECIDE FAST", 78);
     event_border(RED, "", 0);
 }
 
@@ -446,24 +447,27 @@ static void show_lay_art(void) {
 static void show_boyfriend_art(void) {
     clear_screen();
     event_border(RED, "UNINVITED GUEST", 1);
-    event_art_row(YELLOW,  "                         ▄████████▄", 78);
-    event_art_row(WHITE,   "                        █  >    <  █", 78);
-    event_art_row(RED,     "                        █    ██    █       WHO ARE YOU?!", 78);
-    event_art_row(MAGENTA, "                       ▄████████████▄", 78);
-    event_art_row(BLUE,    "                 ═════██════╦╦════██═════", 78);
-    event_art_row(CYAN,    "                           ╱    ╲", 78);
-    event_art_row(CYAN,    "                          ╱      ╲", 78);
-    event_row(WHITE,       "THE JEALOUS BOYFRIEND STEPS INTO YOUR PATH");
+    event_art_row(YELLOW,  "                            .--------.", 78);
+    event_art_row(WHITE,   "                           /  >    <  \\", 78);
+    event_art_row(RED,     "                          |     __     |     WHO ARE YOU?!", 78);
+    event_art_row(RED,     "                           \\  '---'  /", 78);
+    event_art_row(MAGENTA, "                            '---+---'", 78);
+    event_art_row(BLUE,    "                               /|\\", 78);
+    event_art_row(CYAN,    "                              / | \\", 78);
+    event_art_row(CYAN,    "                               / \\", 78);
+    event_row(WHITE,       "THE JEALOUS BOYFRIEND BLOCKS YOUR PATH");
     event_border(RED, "", 0);
 }
 
 static void show_riot_crowd_art(void) {
     clear_screen();
     event_border(RED, "RIOT RISING", 1);
-    event_art_row(YELLOW,  "      \\O/         \\O/         \\O/         \\O/         \\O/", 78);
-    event_art_row(MAGENTA, "       |     ▄█▄  |     ▄█▄  |     ▄█▄  |     ▄█▄  |", 78);
-    event_art_row(CYAN,    "      / \\    █A█ / \\    █N█ / \\    █S█ / \\    █I█ / \\", 78);
-    event_art_row(WHITE,   "   ███████████████████████████████████████████████████████████", 78);
+    event_art_row(MAGENTA, "       [ A ]   [ N ]   [ A ]   [ R ]   [ C ]   [ H ]   [ Y ]", 78);
+    event_art_row(YELLOW,  "         |       |       |       |       |       |       |", 78);
+    event_art_row(WHITE,   "        \\O/     \\O/     \\O/     \\O/     \\O/     \\O/     \\O/", 78);
+    event_art_row(CYAN,    "         |       |       |       |       |       |       |", 78);
+    event_art_row(CYAN,    "        / \\     / \\     / \\     / \\     / \\     / \\     / \\", 78);
+    event_art_row(WHITE,   "   ----------------------------------------------------------------------", 78);
     event_row(RED,     "THE CROWD IS LOUD.  THE SECURITY LINE IS FORMING.");
     event_row(YELLOW,  "BUILD 60 RIOT POINTS — THEN FIGHT");
     event_border(RED, "", 0);
