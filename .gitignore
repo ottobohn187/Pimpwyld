@@ -1,0 +1,10 @@
+# Local build outputs
+source/pwyld20
+source/pwyld20.exe
+source/*.o
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
