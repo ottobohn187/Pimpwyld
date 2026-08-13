@@ -420,11 +420,11 @@ static void show_street_attack_art(void) {
 static void show_mugging_art(void) {
     clear_screen();
     event_border(RED, "HOLD-UP", 1);
-    event_art_row(RED,     "        .-------.                                      \\O/", 78);
-    event_art_row(WHITE,   "       /  o   o  \\                                      |", 78);
-    event_art_row(RED,     "       |    ^    |__                                    YOU", 78);
-    event_art_row(MAGENTA, "       \\  '---'  /  \\_____[===========>              / \\", 78);
-    event_art_row(CYAN,    "        '---.---'        GIVE IT UP!", 78);
+    event_art_row(RED,     "        .-------.                                             \\O/", 78);
+    event_art_row(WHITE,   "       /  o   o  \\                                             |", 78);
+    event_art_row(RED,     "       |    ^    |__     \\_____[===========================>   |", 78);
+    event_art_row(MAGENTA, "       \\  '---'  /                 GIVE IT UP!                / \\", 78);
+    event_art_row(CYAN,    "        '---.---'                                             YOU", 78);
     event_art_row(CYAN,    "           /|\\", 78);
     event_art_row(YELLOW,  "          / | \\              CASH OR 20 STATUS", 78);
     event_art_row(WHITE,   "           / \\               DECIDE FAST", 78);
