@@ -24,6 +24,7 @@
 #define SCHOOL_COUNT 19
 #define GUN_COUNT 10
 #define DAY_LIMIT 60
+#define EVENT_SCREEN_WIDTH 108
 
 #define RESET   "\x1b[0m"
 #define BLACK   "\x1b[30m"
@@ -99,6 +100,51 @@ static void clear_screen(void) {
     fflush(stdout);
 }
 
+static int utf8_columns(const char *text) {
+    int columns = 0;
+    const unsigned char *p = (const unsigned char *)text;
+    while (*p) {
+        if ((*p & 0xc0u) != 0x80u) ++columns;
+        ++p;
+    }
+    return columns;
+}
+
+static void repeat_text(const char *text, int count) {
+    while (count-- > 0) fputs(text, stdout);
+}
+
+static void event_border(const char *color, const char *title, int top) {
+    int inside = EVENT_SCREEN_WIDTH - 2;
+    fputs(color, stdout);
+    if (top) {
+        int title_width = utf8_columns(title) + 2;
+        int left = (inside - title_width) / 2;
+        fputs("╔", stdout);
+        repeat_text("═", left);
+        printf(" %s ", title);
+        repeat_text("═", inside - left - title_width);
+        puts("╗");
+    } else {
+        fputs("╚", stdout);
+        repeat_text("═", inside);
+        puts("╝" RESET);
+    }
+}
+
+static void event_row(const char *color, const char *content) {
+    int inside = EVENT_SCREEN_WIDTH - 2;
+    int width = utf8_columns(content);
+    int left = width < inside ? (inside - width) / 2 : 0;
+    int right = width < inside ? inside - width - left : 0;
+    fputs(color, stdout);
+    fputs("║", stdout);
+    repeat_text(" ", left);
+    fputs(content, stdout);
+    repeat_text(" ", right);
+    puts("║");
+}
+
 #include "ansi_scenes.inc"
 #include "coat_only.inc"
 #include "gun_dealer.inc"
@@ -124,7 +170,7 @@ static int read_key(void) {
 
 static void wait_for_enter(void) {
     int ch;
-    fputs(WHITE "\n                         Press [Enter]" RESET, stdout);
+    fputs(WHITE "\n                                                Press [Enter]" RESET, stdout);
     fflush(stdout);
     do { ch = read_key(); } while (ch != '\n' && ch != '\r' && ch != EOF);
     putchar('\n');
@@ -344,78 +390,78 @@ static void show_splash(void) {
 
 static void show_street_attack_art(void) {
     clear_screen();
-    puts(RED     "╔════════════════════════ STREET AMBUSH ══════════════════════════╗");
-    puts(BLUE    "║       ▄██▄                ▄▄▄▄▄                 ▄██▄            ║");
-    puts(WHITE   "║      █ ▀▀ █        ══════╬█████╬══════         █ ▀▀ █           ║");
-    puts(MAGENTA "║       ▀██▀              ▄███████▄               ▀██▀            ║");
-    puts(CYAN    "║     ▄██████▄           ██  YOU  ██            ▄██████▄          ║");
-    puts(RED     "║    ██ ═╦══ ██   >>>    ██ ▄███▄ ██    <<<    ██ ══╦ ██         ║");
-    puts(YELLOW  "║       ▄██▄              ▀███████▀              ▄██▄             ║");
-    puts(WHITE   "║    NO EXIT LEFT.  NO EXIT RIGHT.  FIGHT THROUGH.                ║");
-    puts(RED     "╚══════════════════════════════════════════════════════════════════╝" RESET);
+    event_border(RED, "STREET AMBUSH", 1);
+    event_row(BLUE,    "▄██▄                ▄▄▄▄▄                 ▄██▄");
+    event_row(WHITE,   "█ ▀▀ █        ══════╬█████╬══════         █ ▀▀ █");
+    event_row(MAGENTA, "▀██▀              ▄███████▄               ▀██▀");
+    event_row(CYAN,    "▄██████▄           ██  YOU  ██            ▄██████▄");
+    event_row(RED,     "██ ═╦══ ██   >>>    ██ ▄███▄ ██    <<<    ██ ══╦ ██");
+    event_row(YELLOW,  "▄██▄              ▀███████▀              ▄██▄");
+    event_row(WHITE,   "NO EXIT LEFT.  NO EXIT RIGHT.  FIGHT THROUGH.");
+    event_border(RED, "", 0);
 }
 
 static void show_mugging_art(void) {
     clear_screen();
-    puts(RED     "╔══════════════════════════ HOLD-UP ══════════════════════════════╗");
-    puts(BLUE    "║                         ▄████▄                                  ║");
-    puts(WHITE   "║                        █ ▄  ▄ █                                 ║");
-    puts(RED     "║                        █  ▀▀  █══════╦══════════╗               ║");
-    puts(MAGENTA "║                     ▄██████████▄     ║          ╚══             ║");
-    puts(CYAN    "║                    ██  GIVE IT UP ██ ▄██▄                       ║");
-    puts(YELLOW  "║                         $  $  $                                  ║");
-    puts(WHITE   "║                 STATUS OR CASH — DECIDE FAST                    ║");
-    puts(RED     "╚══════════════════════════════════════════════════════════════════╝" RESET);
+    event_border(RED, "HOLD-UP", 1);
+    event_row(BLUE,    "▄████▄");
+    event_row(WHITE,   "█ ▄  ▄ █");
+    event_row(RED,     "█  ▀▀  █══════╦══════════╗");
+    event_row(MAGENTA, "▄██████████▄     ║          ╚══");
+    event_row(CYAN,    "██  GIVE IT UP ██ ▄██▄");
+    event_row(YELLOW,  "$  $  $");
+    event_row(WHITE,   "STATUS OR CASH — DECIDE FAST");
+    event_border(RED, "", 0);
 }
 
 static void show_lay_art(void) {
     clear_screen();
-    puts(MAGENTA "╔════════════════════════ AFTER HOURS ════════════════════════════╗");
-    puts(BLUE    "║                 .-''''-.          .-''''-.                      ║");
-    puts(CYAN    "║                /  .--.  \\        /  .--.  \\                     ║");
-    puts(WHITE   "║               |  (♥  ♥)  |      |  (♥  ♥)  |                    ║");
-    puts(MAGENTA "║                \\   ▿   /        \\   ▿   /                     ║");
-    puts(RED     "║                 '.___.'    ♥ ♥    '.___.'                      ║");
-    puts(CYAN    "║                    \\      SAFE NIGHT      /                     ║");
-    puts(YELLOW  "║                     CONDOM USED • IMPACT +1                      ║");
-    puts(MAGENTA "╚══════════════════════════════════════════════════════════════════╝" RESET);
+    event_border(MAGENTA, "AFTER HOURS", 1);
+    event_row(BLUE,    ".-''''-.          .-''''-.");
+    event_row(CYAN,    "/  .--.  \\        /  .--.  \\");
+    event_row(WHITE,   "|  (♥  ♥)  |      |  (♥  ♥)  |");
+    event_row(MAGENTA, "\\   ▿   /        \\   ▿   /");
+    event_row(RED,     "'.___.'    ♥ ♥    '.___.'");
+    event_row(CYAN,    "\\      SAFE NIGHT      /");
+    event_row(YELLOW,  "CONDOM USED • IMPACT +1");
+    event_border(MAGENTA, "", 0);
 }
 
 static void show_boyfriend_art(void) {
     clear_screen();
-    puts(RED     "╔════════════════════════ UNINVITED GUEST ════════════════════════╗");
-    puts(YELLOW  "║                         ▄████▄                                  ║");
-    puts(WHITE   "║                        █ >  < █                                 ║");
-    puts(RED     "║                        █  ██  █       WHO ARE YOU?!             ║");
-    puts(MAGENTA "║                      ▄██████████▄                               ║");
-    puts(BLUE    "║                 ════██═══╦╦═══██════                           ║");
-    puts(CYAN    "║                          ╱ ╲                                    ║");
-    puts(WHITE   "║                  THE BOYFRIEND WANTS A TURN                     ║");
-    puts(RED     "╚══════════════════════════════════════════════════════════════════╝" RESET);
+    event_border(RED, "UNINVITED GUEST", 1);
+    event_row(YELLOW,  "▄████▄");
+    event_row(WHITE,   "█ >  < █");
+    event_row(RED,     "█  ██  █       WHO ARE YOU?!");
+    event_row(MAGENTA, "▄██████████▄");
+    event_row(BLUE,    "════██═══╦╦═══██════");
+    event_row(CYAN,    "╱ ╲");
+    event_row(WHITE,   "THE BOYFRIEND WANTS A TURN");
+    event_border(RED, "", 0);
 }
 
 static void show_riot_crowd_art(void) {
     clear_screen();
-    puts(RED     "╔═════════════════════════ RIOT RISING ═══════════════════════════╗");
-    puts(YELLOW  "║       \\O/       \\O/        \\O/       \\O/        \\O/             ║");
-    puts(MAGENTA "║        |    ▄█▄  |    ▄█▄   |   ▄█▄  |    ▄█▄   |              ║");
-    puts(CYAN    "║       / \\  █A█ / \\   █N█  / \\  █S█ / \\   █I█  / \\             ║");
-    puts(WHITE   "║   ████████████████████████████████████████████████████████      ║");
-    puts(RED     "║      THE CROWD IS LOUD.  THE SECURITY LINE IS FORMING.          ║");
-    puts(YELLOW  "║                BUILD 60 RIOT POINTS — THEN FIGHT                ║");
-    puts(RED     "╚══════════════════════════════════════════════════════════════════╝" RESET);
+    event_border(RED, "RIOT RISING", 1);
+    event_row(YELLOW,  "\\O/       \\O/        \\O/       \\O/        \\O/");
+    event_row(MAGENTA, " |    ▄█▄  |    ▄█▄   |   ▄█▄  |    ▄█▄   |");
+    event_row(CYAN,    "/ \\  █A█ / \\   █N█  / \\  █S█ / \\   █I█  / \\");
+    event_row(WHITE,   "████████████████████████████████████████████████████████");
+    event_row(RED,     "THE CROWD IS LOUD.  THE SECURITY LINE IS FORMING.");
+    event_row(YELLOW,  "BUILD 60 RIOT POINTS — THEN FIGHT");
+    event_border(RED, "", 0);
 }
 
 static void show_market_panic_art(void) {
     clear_screen();
-    puts(RED     "╔════════════════════════ MARKET PANIC ═══════════════════════════╗");
-    puts(YELLOW  "║    COCAINE  $$$$$$$ ↑↑       HEROIN  $$$$$ ↑↑                  ║");
-    puts(MAGENTA "║       CRACK  $$$$$$ ↑↑      CRYSTAL  $$$$  ↑↑                  ║");
-    puts(CYAN    "║                    ▄████████▄                                  ║");
-    puts(WHITE   "║                   ██  SOLD!  ██       SUPPLY                   ║");
-    puts(RED     "║                   ██  SOLD!  ██       COLLAPSED                ║");
-    puts(YELLOW  "║                    ▀████████▀         PRICES EXPLODE            ║");
-    puts(RED     "╚══════════════════════════════════════════════════════════════════╝" RESET);
+    event_border(RED, "MARKET PANIC", 1);
+    event_row(YELLOW,  "COCAINE  $$$$$$$ ↑↑       HEROIN  $$$$$ ↑↑");
+    event_row(MAGENTA, "CRACK  $$$$$$ ↑↑      CRYSTAL  $$$$  ↑↑");
+    event_row(CYAN,    "▄████████▄");
+    event_row(WHITE,   "██  SOLD!  ██       SUPPLY");
+    event_row(RED,     "██  SOLD!  ██       COLLAPSED");
+    event_row(YELLOW,  "▀████████▀         PRICES EXPLODE");
+    event_border(RED, "", 0);
 }
 
 static void left_market_row(const Game *g, int row) {
@@ -864,12 +910,13 @@ static void show_event_gallery(const Game *g, const School schools[SCHOOL_COUNT]
     gallery_caption(4, 9, "RIOT RISING", "The organizing stage before riot combat.");
 
     clear_screen();
-    puts(RED "╔════════════════════════ RIOT COMBAT ════════════════════════════╗" RESET);
+    event_border(RED, "RIOT COMBAT", 1);
     draw_enemy_art();
-    puts(WHITE "──────────────────────────────────────────────────────────────────" RESET);
+    event_row(WHITE, "──────────────────────────────────────────────────────────────────");
     draw_party_backs();
-    puts(GREEN "  YOU [######] 100/100    " CYAN "ACE [######] 55/55    NYX [######] 45/45" RESET);
-    puts(YELLOW "  (A)ttack  (G)un  (D)efend  (R)ally  (E)scape" RESET);
+    event_row(GREEN, "YOU [######] 100/100    ACE [######] 55/55    NYX [######] 45/45");
+    event_row(YELLOW, "(A)ttack  (G)un  (D)efend  (R)ally  (E)scape");
+    event_border(RED, "", 0);
     gallery_caption(5, 9, "RIOT BATTLE", "Turn-based crew combat; nobody takes damage in Test mode.");
 
     show_street_attack_art();
@@ -891,10 +938,9 @@ static void show_event_gallery(const Game *g, const School schools[SCHOOL_COUNT]
     unchanged = memcmp(&before, g, sizeof(before)) == 0 &&
                 memcmp(school_before, schools, sizeof(school_before)) == 0;
     clear_screen();
-    puts(MAGENTA "╔════════════════════ EVENT TEST COMPLETE ════════════════════════╗");
-    puts(WHITE   "║  AK • COAT • PANIC • RIOT • COMBAT • ATTACK • MUGGING • LAY   ║");
-    puts(WHITE   "║  • BOYFRIEND                                                  ║");
-    puts(MAGENTA "╚══════════════════════════════════════════════════════════════════╝" RESET);
+    event_border(MAGENTA, "EVENT TEST COMPLETE", 1);
+    event_row(WHITE, "AK • COAT • PANIC • RIOT • COMBAT • ATTACK • MUGGING • LAY • BOYFRIEND");
+    event_border(MAGENTA, "", 0);
     puts(unchanged ? GREEN "Verified: no cash, inventory, health, day, campus, or RNG changes."
                    RESET
                    : RED "Warning: gallery state changed; restoring on return." RESET);
