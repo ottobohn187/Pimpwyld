@@ -145,6 +145,22 @@ static void event_row(const char *color, const char *content) {
     puts("║");
 }
 
+static void event_art_row(const char *color, const char *content, int canvas_width) {
+    int inside = EVENT_SCREEN_WIDTH - 2;
+    int width = utf8_columns(content);
+    int canvas = canvas_width < inside ? canvas_width : inside;
+    int left = (inside - canvas) / 2;
+    int right;
+    if (width > canvas) width = canvas;
+    right = inside - left - width;
+    fputs(color, stdout);
+    fputs("║", stdout);
+    repeat_text(" ", left);
+    fputs(content, stdout);
+    repeat_text(" ", right);
+    puts("║");
+}
+
 #include "ansi_scenes.inc"
 #include "coat_only.inc"
 #include "gun_dealer.inc"
@@ -404,12 +420,12 @@ static void show_street_attack_art(void) {
 static void show_mugging_art(void) {
     clear_screen();
     event_border(RED, "HOLD-UP", 1);
-    event_row(BLUE,    "▄████▄");
-    event_row(WHITE,   "█ ▄  ▄ █");
-    event_row(RED,     "█  ▀▀  █══════╦══════════╗");
-    event_row(MAGENTA, "▄██████████▄     ║          ╚══");
-    event_row(CYAN,    "██  GIVE IT UP ██ ▄██▄");
-    event_row(YELLOW,  "$  $  $");
+    event_art_row(BLUE,    "          ▄████▄                                      ▄██▄", 78);
+    event_art_row(WHITE,   "         █ ▄  ▄ █                                    █▀▀█", 78);
+    event_art_row(RED,     "         █  ▀▀  █        ╔══════════════════╗       █YOU█", 78);
+    event_art_row(MAGENTA, "       ▄██████████▄      ═╣  GIVE IT UP!     ╠══►  ▄████▄", 78);
+    event_art_row(CYAN,    "      ██  ██  ██  ██      ╚══════════════════╝     ██ ██ ██", 78);
+    event_art_row(YELLOW,  "           $  $  $                 CASH OR 20 STATUS", 78);
     event_row(WHITE,   "STATUS OR CASH — DECIDE FAST");
     event_border(RED, "", 0);
 }
@@ -430,23 +446,24 @@ static void show_lay_art(void) {
 static void show_boyfriend_art(void) {
     clear_screen();
     event_border(RED, "UNINVITED GUEST", 1);
-    event_row(YELLOW,  "▄████▄");
-    event_row(WHITE,   "█ >  < █");
-    event_row(RED,     "█  ██  █       WHO ARE YOU?!");
-    event_row(MAGENTA, "▄██████████▄");
-    event_row(BLUE,    "════██═══╦╦═══██════");
-    event_row(CYAN,    "╱ ╲");
-    event_row(WHITE,   "THE BOYFRIEND WANTS A TURN");
+    event_art_row(YELLOW,  "                         ▄████████▄", 78);
+    event_art_row(WHITE,   "                        █  >    <  █", 78);
+    event_art_row(RED,     "                        █    ██    █       WHO ARE YOU?!", 78);
+    event_art_row(MAGENTA, "                       ▄████████████▄", 78);
+    event_art_row(BLUE,    "                 ═════██════╦╦════██═════", 78);
+    event_art_row(CYAN,    "                           ╱    ╲", 78);
+    event_art_row(CYAN,    "                          ╱      ╲", 78);
+    event_row(WHITE,       "THE JEALOUS BOYFRIEND STEPS INTO YOUR PATH");
     event_border(RED, "", 0);
 }
 
 static void show_riot_crowd_art(void) {
     clear_screen();
     event_border(RED, "RIOT RISING", 1);
-    event_row(YELLOW,  "\\O/       \\O/        \\O/       \\O/        \\O/");
-    event_row(MAGENTA, " |    ▄█▄  |    ▄█▄   |   ▄█▄  |    ▄█▄   |");
-    event_row(CYAN,    "/ \\  █A█ / \\   █N█  / \\  █S█ / \\   █I█  / \\");
-    event_row(WHITE,   "████████████████████████████████████████████████████████");
+    event_art_row(YELLOW,  "      \\O/         \\O/         \\O/         \\O/         \\O/", 78);
+    event_art_row(MAGENTA, "       |     ▄█▄  |     ▄█▄  |     ▄█▄  |     ▄█▄  |", 78);
+    event_art_row(CYAN,    "      / \\    █A█ / \\    █N█ / \\    █S█ / \\    █I█ / \\", 78);
+    event_art_row(WHITE,   "   ███████████████████████████████████████████████████████████", 78);
     event_row(RED,     "THE CROWD IS LOUD.  THE SECURITY LINE IS FORMING.");
     event_row(YELLOW,  "BUILD 60 RIOT POINTS — THEN FIGHT");
     event_border(RED, "", 0);
@@ -455,12 +472,12 @@ static void show_riot_crowd_art(void) {
 static void show_market_panic_art(void) {
     clear_screen();
     event_border(RED, "MARKET PANIC", 1);
-    event_row(YELLOW,  "COCAINE  $$$$$$$ ↑↑       HEROIN  $$$$$ ↑↑");
-    event_row(MAGENTA, "CRACK  $$$$$$ ↑↑      CRYSTAL  $$$$  ↑↑");
-    event_row(CYAN,    "▄████████▄");
-    event_row(WHITE,   "██  SOLD!  ██       SUPPLY");
-    event_row(RED,     "██  SOLD!  ██       COLLAPSED");
-    event_row(YELLOW,  "▀████████▀         PRICES EXPLODE");
+    event_art_row(YELLOW,  "       COCAINE  $$$$$$$ ↑↑              HEROIN   $$$$$ ↑↑", 78);
+    event_art_row(MAGENTA, "       CRACK    $$$$$$  ↑↑              CRYSTAL  $$$$  ↑↑", 78);
+    event_art_row(CYAN,    "                         ╔══════════════╗", 78);
+    event_art_row(WHITE,   "                         ║    SOLD!     ║      SUPPLY", 78);
+    event_art_row(RED,     "                         ║    SOLD!     ║      COLLAPSED", 78);
+    event_art_row(YELLOW,  "                         ╚══════════════╝      PRICES EXPLODE", 78);
     event_border(RED, "", 0);
 }
 
@@ -849,32 +866,33 @@ typedef struct {
     char action;
 } Fighter;
 
-static void print_hp_bar(int hp, int max_hp) {
+static void hp_bar_string(char bar[9], int hp, int max_hp) {
     int i, filled = max_hp > 0 ? hp * 6 / max_hp : 0;
     if (filled < 0) filled = 0;
     if (filled > 6) filled = 6;
-    putchar('[');
-    for (i = 0; i < 6; ++i) putchar(i < filled ? '#' : '.');
-    putchar(']');
+    bar[0] = '[';
+    for (i = 0; i < 6; ++i) bar[i + 1] = i < filled ? '#' : '.';
+    bar[7] = ']';
+    bar[8] = '\0';
 }
 
 static void draw_enemy_art(void) {
-    puts(RED     "       ▄████▄              ▄████████▄              ▄████▄");
-    puts(YELLOW  "      █ ▄  ▄ █            █ ▄      ▄ █            █ ▄  ▄ █");
-    puts(WHITE   "      █ ▀  ▀ █            █ ▀      ▀ █            █ ▀  ▀ █");
-    puts(RED     "       ▀█▄▄█▀              ▀█▄ ▀▀ ▄█▀              ▀█▄▄█▀");
-    puts(MAGENTA "      ▄██████▄            ▄██████████▄            ▄██████▄");
-    puts(BLUE    "     ██ ████ ██          ██  ██████  ██          ██ ████ ██");
-    puts(CYAN    "    ██  ████  ██══╦      ██▄██ ●  ██▄██      ╦══██  ████  ██");
-    puts(WHITE   "       ▄█  █▄              ▄██    ██▄              ▄█  █▄" RESET);
+    event_art_row(RED,     "       ▄████▄              ▄████████▄              ▄████▄", 78);
+    event_art_row(YELLOW,  "      █ ▄  ▄ █            █ ▄      ▄ █            █ ▄  ▄ █", 78);
+    event_art_row(WHITE,   "      █ ▀  ▀ █            █ ▀      ▀ █            █ ▀  ▀ █", 78);
+    event_art_row(RED,     "       ▀█▄▄█▀              ▀█▄ ▀▀ ▄█▀              ▀█▄▄█▀", 78);
+    event_art_row(MAGENTA, "      ▄██████▄            ▄██████████▄            ▄██████▄", 78);
+    event_art_row(BLUE,    "     ██ ████ ██          ██  ██████  ██          ██ ████ ██", 78);
+    event_art_row(CYAN,    "    ██  ████  ██══╦      ██▄██ ●  ██▄██      ╦══██  ████  ██", 78);
+    event_art_row(WHITE,   "       ▄█  █▄              ▄██    ██▄              ▄█  █▄", 78);
 }
 
 static void draw_party_backs(void) {
-    puts(BLUE    "          ▄██▄                 ▄██▄                 ▄██▄");
-    puts(CYAN    "         ██████               ██████               ██████");
-    puts(MAGENTA "           ██                   ██                   ██");
-    puts(BLUE    "        ▄██████▄             ▄██████▄             ▄██████▄");
-    puts(CYAN    "       ██  ██  ██           ██  ██  ██           ██  ██  ██" RESET);
+    event_art_row(BLUE,    "          ▄██▄                 ▄██▄                 ▄██▄", 78);
+    event_art_row(CYAN,    "         ██████               ██████               ██████", 78);
+    event_art_row(MAGENTA, "           ██                   ██                   ██", 78);
+    event_art_row(BLUE,    "        ▄██████▄             ▄██████▄             ▄██████▄", 78);
+    event_art_row(CYAN,    "       ██  ██  ██           ██  ██  ██           ██  ██  ██", 78);
 }
 
 static void gallery_caption(int slide, int total, const char *title,
@@ -915,7 +933,7 @@ static void show_event_gallery(const Game *g, const School schools[SCHOOL_COUNT]
     event_row(WHITE, "──────────────────────────────────────────────────────────────────");
     draw_party_backs();
     event_row(GREEN, "YOU [######] 100/100    ACE [######] 55/55    NYX [######] 45/45");
-    event_row(YELLOW, "(A)ttack  (G)un  (D)efend  (R)ally  (E)scape");
+    event_row(YELLOW, "FIGHT:  (A)ttack  (G)un  (D)efend  (R)ally  (E)scape");
     event_border(RED, "", 0);
     gallery_caption(5, 9, "RIOT BATTLE", "Turn-based crew combat; nobody takes damage in Test mode.");
 
@@ -949,23 +967,28 @@ static void show_event_gallery(const Game *g, const School schools[SCHOOL_COUNT]
 
 static void draw_battle_screen(const School *school, const Fighter party[3],
                                int enemy_hp, int enemy_max, int round) {
-    int i;
+    char title[96], enemy[96], crew[160];
+    char enemy_bar[9], you_bar[9], ace_bar[9], nyx_bar[9];
     clear_screen();
-    printf(RED "╔═ RIOT BATTLE: %-56s R%02d ╗\n" RESET, school->name, round);
+    snprintf(title, sizeof(title), "RIOT BATTLE — %s — ROUND %02d", school->name, round);
+    event_border(RED, title, 1);
     draw_enemy_art();
-    printf(RED "                 CAMPUS ENFORCERS  " WHITE);
-    print_hp_bar(enemy_hp, enemy_max);
-    printf(" %3d/%-3d\n" RESET, enemy_hp, enemy_max);
-    puts(WHITE "──────────────────────────────────────────────────────────────────────────────" RESET);
+    hp_bar_string(enemy_bar, enemy_hp, enemy_max);
+    snprintf(enemy, sizeof(enemy), "CAMPUS ENFORCERS  %s %3d/%-3d", enemy_bar, enemy_hp, enemy_max);
+    event_row(RED, enemy);
+    event_row(WHITE, "──────────────────────────────────────────────────────────────────────────────");
     draw_party_backs();
-    for (i = 0; i < 3; ++i) {
-        fputs(i == 0 ? GREEN : CYAN, stdout);
-        printf(" %-4s ", party[i].name);
-        print_hp_bar(party[i].hp, party[i].max_hp);
-        printf(" %3d/%-3d%s", party[i].hp, party[i].max_hp,
-               i == 2 ? "\n" : "  ");
-    }
-    puts(WHITE "──────────────────────────────────────────────────────────────────────────────" RESET);
+    hp_bar_string(you_bar, party[0].hp, party[0].max_hp);
+    hp_bar_string(ace_bar, party[1].hp, party[1].max_hp);
+    hp_bar_string(nyx_bar, party[2].hp, party[2].max_hp);
+    snprintf(crew, sizeof(crew),
+             "YOU %s %d/%d    ACE %s %d/%d    NYX %s %d/%d",
+             you_bar, party[0].hp, party[0].max_hp,
+             ace_bar, party[1].hp, party[1].max_hp,
+             nyx_bar, party[2].hp, party[2].max_hp);
+    event_row(GREEN, crew);
+    event_row(YELLOW, "FIGHT:  (A)ttack  (G)un  (D)efend  (R)ally  (E)scape");
+    event_border(RED, "", 0);
 }
 
 static char choose_fighter_action(const Fighter *fighter, int can_escape) {
