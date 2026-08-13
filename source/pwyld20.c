@@ -1162,19 +1162,50 @@ static long impact_score(const Game *g, const School schools[SCHOOL_COUNT]) {
     return score > 0 ? score : 0;
 }
 
-static const char *impact_rank(int schools) {
-    if (schools >= SCHOOL_COUNT - 1) return "TOTAL ANARCHY";
-    if (schools >= 13) return "CONFERENCE NIGHTMARE";
-    if (schools >= 8) return "NATIONAL AGITATOR";
-    if (schools >= 4) return "CAMPUS DISRUPTOR";
-    if (schools >= 1) return "CAMPUS TROUBLE";
+static long reputation_score(const Game *g, const School schools[SCHOOL_COUNT]) {
+    double cash = g->cash > 0 ? g->cash : 0;
+    long cash_bonus = (long)(sqrt(cash) * 10.0);
+    if (cash_bonus > 3000) cash_bonus = 3000;
+    return controlled_count(schools) * 1000L + g->lays * 125L + cash_bonus;
+}
+
+static const char *impact_rank(long reputation) {
+    if (reputation >= 18000) return "TOTAL ANARCHY";
+    if (reputation >= 15000) return "BIG TEN BOGEYMAN";
+    if (reputation >= 12000) return "CONFERENCE WARLORD";
+    if (reputation >= 9000) return "CAMPUS CRIME LORD";
+    if (reputation >= 6000) return "REGIONAL MENACE";
+    if (reputation >= 3000) return "QUAD-RULING OUTLAW";
+    if (reputation >= 1000) return "CAMPUS TROUBLEMAKER";
     return "BARELY A RUMOR";
+}
+
+static void show_day_60_finale(void) {
+    clear_screen();
+    event_border(RED, "DAY 60 — THE LAST NIGHT", 1);
+    event_row(BLUE,    "│█│█│█│█│█│█│█│█│█│█│█│█│█│█│█│█│█│█│");
+    event_row(YELLOW,  "✦       \\|/                         \\|/       ✦");
+    event_row(WHITE,   "|        |        CAMPUS SECURITY        |        |");
+    event_row(BLUE,    "▄██▄        ▄██▄        ▄██▄        ▄██▄        ▄██▄");
+    event_row(WHITE,   "█▀▀█        █▀▀█        █▀▀█        █▀▀█        █▀▀█");
+    event_row(CYAN,    "▄████▄      ▄████▄      ▄████▄      ▄████▄      ▄████▄");
+    event_row(RED,     "╱│╲          ╱│╲          ╱│╲          ╱│╲          ╱│╲");
+    event_row(MAGENTA, "·  \\O/  ·  \\O/  ·  \\O/  ·  \\O/  ·  \\O/  ·  \\O/  ·");
+    event_row(MAGENTA, "\\O/  |  \\O/  |  \\O/  |  \\O/  |  \\O/  |  \\O/  |  \\O/");
+    event_row(YELLOW,  "THE CLOCK HITS MIDNIGHT. THE CAMPUSES REMEMBER YOUR NAME.");
+    event_border(RED, "", 0);
+    puts(RED "\n  Sixty days are gone. Order and anarchy face each other at dawn." RESET);
+    puts(CYAN "  Your campuses, lays, and cash in hand now decide the legend." RESET);
+    wait_for_enter();
 }
 
 static void show_final_impact(const Game *g, const School schools[SCHOOL_COUNT], int quit) {
     int taken = controlled_count(schools);
     double wealth = g->cash + g->bank - g->debt;
     long score = impact_score(g, schools);
+    long reputation = reputation_score(g, schools);
+    long cash_bonus = reputation - taken * 1000L - g->lays * 125L;
+    if (g->health > 0 && g->day > DAY_LIMIT && !quit) show_day_60_finale();
     clear_screen();
     title_bar();
     puts(MAGENTA "\n===================== FINAL IMPACT REPORT =====================" RESET);
@@ -1187,14 +1218,17 @@ static void show_final_impact(const Game *g, const School schools[SCHOOL_COUNT],
     printf(CYAN "Street fights      : " WHITE "%d won / %d lost\n",
            g->fights_won, g->fights_lost);
     printf(CYAN "Lays               : " WHITE "%d\n", g->lays);
+    printf(CYAN "Cash in hand       : " WHITE "$%.0f\n", g->cash);
     printf(CYAN "Status             : " WHITE "%d\n", g->status);
     printf(CYAN "Health remaining   : " WHITE "%d\n", g->health > 0 ? g->health : 0);
     printf(CYAN "Net worth          : " WHITE "$%.0f\n", wealth);
     puts(MAGENTA "---------------------------------------------------------------" RESET);
     printf(YELLOW "IMPACT SCORE: %ld\n", score);
-    printf(GREEN "REPUTATION:  %s\n" RESET, impact_rank(taken));
-    puts(WHITE "Campuses are the biggest part of the score. Riots, lays, status," RESET);
-    puts(WHITE "fight wins, health, and wealth add to the impact you leave behind." RESET);
+    printf(YELLOW "LEGEND SCORE: %ld  " WHITE "(schools %d + lays %d + cash %ld)\n",
+           reputation, taken * 1000, g->lays * 125, cash_bonus);
+    printf(GREEN "FINAL RANK:   %s\n" RESET, impact_rank(reputation));
+    puts(WHITE "Each campus in anarchy is worth 1,000 Legend points. Every lay" RESET);
+    puts(WHITE "adds 125, and cash in hand adds up to a 3,000-point bonus." RESET);
 }
 
 static int self_test(void) {
@@ -1245,6 +1279,18 @@ static int self_test(void) {
     if (purchase_lay(&g, &s[0]) != -1 || g.lays != 4) return 29;
     g.condoms = 1;
     if (purchase_lay(&g, &s[0]) != 1 || g.condoms != 0 || g.lays != 5) return 30;
+    initialize_schools(s);
+    new_game(&g, 1, s);
+    g.cash = 0; g.lays = 0;
+    if (reputation_score(&g, s) != 0 || strcmp(impact_rank(0), "BARELY A RUMOR") != 0)
+        return 31;
+    s[0].control = 100; g.lays = 8; g.cash = 10000;
+    if (reputation_score(&g, s) != 3000 ||
+        strcmp(impact_rank(reputation_score(&g, s)), "QUAD-RULING OUTLAW") != 0)
+        return 32;
+    for (i = 0; i < SCHOOL_COUNT - 1; ++i) s[i].control = 100;
+    if (strcmp(impact_rank(reputation_score(&g, s)), "TOTAL ANARCHY") != 0)
+        return 33;
     puts("self-test: PASS");
     return 0;
 }

@@ -40,6 +40,8 @@ event artwork while the dashboard itself remains a compact 78 columns.
 
 - all 18 current Big Ten universities replace the old K-12 locations
 - 60-day campaign with a final Impact Score and reputation rank
+- day 60 ends on a wide ANSI campus standoff, followed by a Legend Score and
+  rank driven by campuses in anarchy, lays, and cash still in hand
 - self-explanatory command labels such as `(B)uy`, `(S)ell`, and `(R)iot`
 - real latitude/longitude travel distances scaled to fares from $5 to $25
 - high-security campuses have cheaper markets but more dangerous opposition;
