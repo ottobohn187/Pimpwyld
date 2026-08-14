@@ -1,6 +1,6 @@
 CC ?= cc
 CFLAGS ?= -std=c11 -O2 -Wall -Wextra -Wpedantic
-WINDOWS_CC ?= x86_64-w64-mingw32-clang
+WINDOWS_CC ?= x86_64-w64-mingw32-gcc
 WINDOWS_EXE ?= PimpWyld30-Windows-x64.exe
 
 all: pwyld20

@@ -25,6 +25,9 @@
 #define GUN_COUNT 10
 #define DAY_LIMIT 60
 #define EVENT_SCREEN_WIDTH 108
+#define LOAN_GRACE_VISITS 5
+#define LOAN_OVERDUE_DAMAGE 10
+#define HOSPITAL_COST_PER_HP 4
 
 #define RESET   "\x1b[0m"
 #define BLACK   "\x1b[30m"
@@ -49,6 +52,7 @@ typedef struct {
     int riot;
     int academics;
     int lays;
+    int anarchy_sell_turns;
 } School;
 
 typedef struct {
@@ -69,6 +73,7 @@ typedef struct {
     double cash;
     double bank;
     double debt;
+    int loan_visits_remaining;
     double price[DRUG_COUNT];
     int condom_price;
     int girls_available;
@@ -77,6 +82,11 @@ typedef struct {
 } Game;
 
 static int interactive_terminal;
+
+static char normalize_key(int ch) {
+    if (ch >= 'A' && ch <= 'Z') ch += 'a' - 'A';
+    return (char)ch;
+}
 
 static void enable_dos_console(void) {
     interactive_terminal =
@@ -268,8 +278,13 @@ static void update_prices(Game *g, const School *school) {
         if (g->price[i] < 1) g->price[i] = 1;
     }
     g->condom_price = random_between(g, 1, 3);
-    g->girls_available = random_between(g, 0, 9);
-    g->girl_cost = random_between(g, 4, 14) * 100;
+    if (school->control >= 100) {
+        g->girls_available = random_between(g, 5, 9);
+        g->girl_cost = random_between(g, 1, 3) * 100;
+    } else {
+        g->girls_available = random_between(g, 0, 9);
+        g->girl_cost = random_between(g, 4, 14) * 100;
+    }
 }
 
 static int apply_riot_market(Game *g, const School *school) {
@@ -298,6 +313,7 @@ static void initialize_schools(School schools[SCHOOL_COUNT]) {
         schools[i].riot = riots[i];
         schools[i].academics = academics[i];
         schools[i].lays = 0;
+        schools[i].anarchy_sell_turns = 0;
     }
 }
 
@@ -320,6 +336,21 @@ static int used_hold(const Game *g) {
     int i, total = 0;
     for (i = 0; i < DRUG_COUNT; ++i) total += g->hold[i];
     return total;
+}
+
+static int owned_guns(const Game *g) {
+    int i, total = 0;
+    for (i = 0; i < GUN_COUNT; ++i) total += g->guns[i];
+    return total;
+}
+
+static int hospital_price(int missing_health) {
+    return missing_health > 0 ? missing_health * HOSPITAL_COST_PER_HP : 0;
+}
+
+static int affordable_units(double cash, double unit_price) {
+    if (cash <= 0 || unit_price <= 0) return 0;
+    return (int)floor(cash / unit_price);
 }
 
 static int purchase_drug(Game *g, int index, int count) {
@@ -384,7 +415,7 @@ static char read_command(const char *prompt) {
         do { rest = getchar(); } while (rest != '\n' && rest != EOF);
     }
     printf("%c\n", ch);
-    return (char)tolower((unsigned char)ch);
+    return normalize_key(ch);
 }
 
 static void title_bar(void) {
@@ -533,6 +564,19 @@ static void draw_dashboard(const Game *g, const School schools[SCHOOL_COUNT]) {
     clear_screen();
     title_bar();
     printf(YELLOW "Days Left: %d" RESET "\n", DAY_LIMIT - g->day + 1);
+    if (g->debt > 0) {
+        if (g->loan_visits_remaining > 0)
+            printf(YELLOW "Loan ticker: %d campus visit%s until health penalties begin.\n" RESET,
+                   g->loan_visits_remaining,
+                   g->loan_visits_remaining == 1 ? "" : "s");
+        else
+            printf(RED "Loan ticker: OVERDUE - each campus visit costs %d health.\n" RESET,
+                   LOAN_OVERDUE_DAMAGE);
+    }
+    if (schools[g->location].anarchy_sell_turns > 0)
+        printf(MAGENTA "Anarchy market: drug sales pay double for %d more turn%s.\n" RESET,
+               schools[g->location].anarchy_sell_turns,
+               schools[g->location].anarchy_sell_turns == 1 ? "" : "s");
     puts(WHITE "┌── DRUGS ─────────── PRICES ── Hold ─┬── CONDITIONS ────────────────────────┐");
     for (row = 0; row < 13; ++row) {
         left_market_row(g, row);
@@ -560,17 +604,19 @@ static void show_trade_choices(const char *heading) {
     printf(MAGENTA " (G) " WHITE "Meth               " MAGENTA "(H) " WHITE "Grass\n");
     printf(MAGENTA " (I) " WHITE "Speed              " MAGENTA "(J) " WHITE "Ludes\n");
     printf(MAGENTA " (K) " CYAN "Condom             " MAGENTA "(L) " CYAN "Girl\n" RESET);
-    printf(YELLOW "%s" RESET, heading);
+    printf(YELLOW " (Esc) Back\n%s" RESET, heading);
 }
 
 static void jealous_boyfriend_attack(Game *g);
 
 static void buy(Game *g, School schools[SCHOOL_COUNT]) {
-    int index, count, capacity, result;
+    int index, count, capacity, affordable, maximum, result;
     show_trade_choices("Watcha need? ");
     index = read_command("") - 'a';
     if (index == 10) {
-        printf(YELLOW "Condoms: %d       Buy...[_]\n" RESET, g->condoms);
+        affordable = affordable_units(g->cash, g->condom_price);
+        printf(YELLOW "Condoms: %d       Cash: $%.0f       Price: $%d       You can buy: %d\n" RESET,
+               g->condoms, g->cash, g->condom_price, affordable);
         count = read_int("How many? ");
         if (count <= 0) return;
         if (count * g->condom_price <= g->cash) {
@@ -585,6 +631,8 @@ static void buy(Game *g, School schools[SCHOOL_COUNT]) {
         return;
     }
     if (index == 11) {
+        printf(YELLOW "Cash: $%.0f       Cost: $%d       You can afford: %s\n" RESET,
+               g->cash, g->girl_cost, g->cash >= g->girl_cost ? "1" : "0");
         int lay_result = purchase_lay(g, &schools[g->location]);
         if (lay_result == -1) {
             puts(RED "No condom, no lay. Buy condoms first." RESET);
@@ -603,7 +651,11 @@ static void buy(Game *g, School schools[SCHOOL_COUNT]) {
     }
     if (index < 0 || index >= DRUG_COUNT) return;
     capacity = g->hold_max - used_hold(g);
-    printf(YELLOW "Hold: %d       Buy...[_]\n" RESET, capacity);
+    affordable = affordable_units(g->cash, g->price[index]);
+    maximum = affordable < capacity ? affordable : capacity;
+    printf(YELLOW "Cash: $%.0f       Price: $%.0f       Hold space: %d\n" RESET,
+           g->cash, g->price[index], capacity);
+    printf(YELLOW "You can buy: %d %s\n" RESET, maximum, commodities[index].name);
     count = read_int("Buy how many? ");
     result = purchase_drug(g, index, count);
     if (result == 1)
@@ -616,8 +668,9 @@ static void buy(Game *g, School schools[SCHOOL_COUNT]) {
     if (result != 0) wait_for_enter();
 }
 
-static void sell(Game *g) {
+static void sell(Game *g, School schools[SCHOOL_COUNT]) {
     int index, count;
+    double multiplier = schools[g->location].anarchy_sell_turns > 0 ? 2.0 : 1.0;
     show_trade_choices("Watcha selling? ");
     index = read_command("") - 'a';
     if (index == 10) {
@@ -642,9 +695,11 @@ static void sell(Game *g) {
         return;
     }
     g->hold[index] -= count;
-    g->cash += g->price[index] * count;
+    g->cash += g->price[index] * count * multiplier;
     printf(GREEN "Sold %d %s for $%.0f. Cash now: $%.0f.\n" RESET,
-           count, commodities[index].name, g->price[index] * count, g->cash);
+           count, commodities[index].name, g->price[index] * count * multiplier, g->cash);
+    if (multiplier > 1.0)
+        puts(MAGENTA "ANARCHY MARKET: sale paid double!" RESET);
     wait_for_enter();
 }
 
@@ -669,19 +724,80 @@ static void loan_shark(Game *g) {
     if (command == 'r') {
         if (g->debt > 0) puts("I've already given you some money!");
         else if (amount > ceiling) puts("No way. That's too much!!!");
-        else { g->cash += amount; g->debt += amount; }
+        else {
+            g->cash += amount;
+            g->debt += amount;
+            g->loan_visits_remaining = LOAN_GRACE_VISITS;
+            printf(YELLOW "You have %d campus visits to repay before health penalties begin.\n" RESET,
+                   LOAN_GRACE_VISITS);
+        }
     } else if (command == 'p') {
         if (amount > g->cash) puts("Hey you don't have that cash!!");
-        else { if (amount > g->debt) amount = (int)g->debt; g->cash -= amount; g->debt -= amount; }
+        else {
+            if (amount > g->debt) amount = (int)g->debt;
+            g->cash -= amount;
+            g->debt -= amount;
+            if (g->debt <= 0) {
+                g->debt = 0;
+                g->loan_visits_remaining = 0;
+                puts(GREEN "Debt cleared. The loan ticker is gone." RESET);
+            }
+        }
     }
 }
 
-static void hospital(Game *g) {
-    if (g->health >= g->max_health) { puts("Nurse: Hey...You're fine!!"); return; }
-    if (g->cash < 100) { puts("Sorry!!! Not enough money!!"); return; }
-    if (read_command("$100 heals all. Heal all? (Y/N)? ") == 'y') {
-        g->cash -= 100; g->health = g->max_health;
+static int apply_loan_visit(Game *g) {
+    if (g->debt <= 0) {
+        g->loan_visits_remaining = 0;
+        return 0;
     }
+    if (g->loan_visits_remaining > 0) {
+        --g->loan_visits_remaining;
+        return 0;
+    }
+    g->health -= LOAN_OVERDUE_DAMAGE;
+    return LOAN_OVERDUE_DAMAGE;
+}
+
+static void hospital(Game *g) {
+    int missing = g->max_health - g->health;
+    int full_price = hospital_price(missing);
+    int heal_amount = missing;
+    int price;
+    clear_screen();
+    puts(CYAN "==================== CAMPUS HOSPITAL ====================" RESET);
+    printf(WHITE "Health: %d/%d     Cash: $%.0f\n" RESET,
+           g->health, g->max_health, g->cash);
+    if (missing <= 0) {
+        puts(GREEN "Nurse: You're already at full health." RESET);
+        wait_for_enter();
+        return;
+    }
+    if (g->cash < HOSPITAL_COST_PER_HP) {
+        printf(RED "Treatment costs $%d per health point. You need at least $%d.\n" RESET,
+               HOSPITAL_COST_PER_HP, HOSPITAL_COST_PER_HP);
+        wait_for_enter();
+        return;
+    }
+    if (full_price > g->cash) heal_amount = (int)g->cash / HOSPITAL_COST_PER_HP;
+    price = hospital_price(heal_amount);
+    if (heal_amount == missing)
+        printf(YELLOW "Full treatment: restore %d health for $%d.\n" RESET,
+               heal_amount, price);
+    else
+        printf(YELLOW "You cannot afford the full $%d treatment.\n"
+               "Affordable treatment: restore %d health for $%d.\n" RESET,
+               full_price, heal_amount, price);
+    if (read_command("Take the treatment? (Y/N)? ") == 'y') {
+        g->cash -= price;
+        g->health += heal_amount;
+        if (g->health > g->max_health) g->health = g->max_health;
+        printf(GREEN "Treatment complete. Health: %d/%d. Cash remaining: $%.0f.\n" RESET,
+               g->health, g->max_health, g->cash);
+    } else {
+        puts(YELLOW "You leave without treatment." RESET);
+    }
+    wait_for_enter();
 }
 
 static void mugging(Game *g) {
@@ -754,13 +870,36 @@ static void trenchcoat_dealer(Game *g) {
 
 static void street_attack(Game *g, const School *school) {
     int attackers = random_between(g, 1, 2 + school->security / 25);
-    int i, defense = g->status + random_between(g, 0, 35);
-    int enemy = attackers * 12 + school->security / 2 + random_between(g, 0, 25);
-    for (i = 0; i < GUN_COUNT; ++i) defense += g->guns[i] * gun_power[i];
+    int i, gun_count = owned_guns(g), defense, enemy;
+    char action;
     show_street_attack_art();
     printf(RED "\n%d hostile %s jump%s you near %s!\n" RESET,
            attackers, attackers == 1 ? "person" : "people",
            attackers == 1 ? "s" : "", school->name);
+    if (gun_count > 0) {
+        printf(CYAN "You have %d gun%s.\n" RESET, gun_count, gun_count == 1 ? "" : "s");
+        action = read_command(YELLOW "(F)ight with a gun or (E)scape? " RESET);
+    } else {
+        puts(YELLOW "You have no gun. Your only chance is to escape." RESET);
+        action = 'e';
+    }
+    if (action != 'f') {
+        int escape_chance = 65 + g->status - school->security / 2;
+        if (escape_chance < 20) escape_chance = 20;
+        if (escape_chance > 85) escape_chance = 85;
+        if (random_between(g, 1, 100) <= escape_chance) {
+            puts(GREEN "You break away and escape the ambush." RESET);
+            wait_for_enter();
+            return;
+        }
+        puts(RED "They cut off your escape. You have to defend yourself!" RESET);
+    }
+    defense = g->status + g->health / 4 + random_between(g, 0, 35);
+    enemy = attackers * 12 + school->security / 2 + random_between(g, 0, 25);
+    if (action == 'f') {
+        for (i = 0; i < GUN_COUNT; ++i) defense += g->guns[i] * gun_power[i];
+        puts(CYAN "You draw your weapon and fight back!" RESET);
+    }
     if (defense >= enemy) {
         int reward = random_between(g, 50, 250) * attackers;
         g->cash += reward;
@@ -810,8 +949,8 @@ static void jealous_boyfriend_attack(Game *g) {
 
 static void random_travel_event(Game *g, const School *school) {
     int roll = random_between(g, 1, 100);
-    int attack_chance = 14 + g->riots_attempted * 4;
-    if (attack_chance > 55) attack_chance = 55;
+    int attack_chance = 8 + g->riots_attempted * 2;
+    if (attack_chance > 30) attack_chance = 30;
     if (roll <= attack_chance) street_attack(g, school);
     else if (roll <= attack_chance + 11) gun_dealer(g);
     else if (roll <= attack_chance + 20) trenchcoat_dealer(g);
@@ -843,6 +982,14 @@ static void drive(Game *g, School schools[SCHOOL_COUNT]) {
     g->location = choice;
     ++g->day;
     if (g->debt > 0) g->debt = floor(g->debt * 1.10);
+    {
+        int loan_damage = apply_loan_visit(g);
+        if (loan_damage > 0)
+            printf(RED "The loan shark collects in blood: -%d health. Pay the debt to stop it.\n" RESET,
+                   loan_damage);
+        else if (g->debt > 0 && g->loan_visits_remaining == 0)
+            puts(RED "Your loan is now overdue. Future campus visits will cost health." RESET);
+    }
     schools[choice].riot += random_between(g, 0, 8);
     if (schools[choice].riot > 100) schools[choice].riot = 100;
     update_prices(g, &schools[choice]);
@@ -1100,14 +1247,17 @@ static int combat(Game *g, School *school) {
     if (enemy_hp <= 0) {
         school->control = 100;
         school->riot = 0;
-        school->security = original_security / 3;
-        if (school->security < 1) school->security = 1;
+        school->security = 0;
+        school->academics = 0;
+        school->anarchy_sell_turns = 2;
+        update_prices(g, school);
         g->status += 10 + original_security / 5;
         g->cash += original_security * 25;
         ++g->fights_won;
         puts(GREEN "You WIN!! The university falls into ANARCHY." RESET);
-        printf(CYAN "Security collapses from %d to %d. This becomes a strong sell market.\n" RESET,
-               original_security, school->security);
+        printf(CYAN "Security collapses from %d to 0 and academics plummet to 0.\n" RESET,
+               original_security);
+        puts(MAGENTA "Girls now cost $100-$300 here, and drug sales pay double for 2 turns." RESET);
         return 1;
     }
     ++g->fights_lost;
@@ -1134,6 +1284,7 @@ static void riot(Game *g, School schools[SCHOOL_COUNT]) {
         show_riot_crowd_art();
         printf(MAGENTA "You organize a campus protest. Riot points +%d (now %d%%).\n" RESET,
                gain, s->riot);
+        puts(YELLOW "The riot action spends one campaign day." RESET);
         if (s->riot >= 60)
             puts(YELLOW "The crowd is ready. Choose (R)iot again to begin combat." RESET);
         printf(YELLOW "Riot actions: %d. Future street-fight risk has increased.\n" RESET,
@@ -1143,6 +1294,7 @@ static void riot(Game *g, School schools[SCHOOL_COUNT]) {
     }
     ++g->riots_attempted;
     ++g->day;
+    puts(YELLOW "The riot action spends one campaign day." RESET);
     printf("Time to riot and take over %s!!\n", s->name);
     if (combat(g, s) == 1) ++g->riots_won;
     printf(YELLOW "Riots attempted: %d. Future street-fight risk has increased.\n" RESET,
@@ -1283,6 +1435,16 @@ static int self_test(void) {
     g.hold_max = DRUG_COUNT + 1;
     g.cash = 0;
     if (purchase_drug(&g, 5, 1) != -2) return 21;
+    if (affordable_units(500, 100) != 5 || affordable_units(99, 100) != 0 ||
+        affordable_units(500, 0) != 0) return 37;
+    if (hospital_price(25) != 100 || hospital_price(0) != 0 || owned_guns(&g) != 1)
+        return 38;
+    if (normalize_key('A') != 'a' || normalize_key('a') != 'a' ||
+        normalize_key('G') != 'g') return 39;
+    s[0].control = 100; s[0].security = 0; s[0].academics = 0;
+    update_prices(&g, &s[0]);
+    if (g.girl_cost < 100 || g.girl_cost > 300 || g.girls_available < 5 ||
+        g.girls_available > 9) return 40;
     g.cash = 10000;
     if (purchase_guns(&g, 6, 2, 7000) != 1 || g.guns[6] != 2 || g.cash != 3000)
         return 22;
@@ -1318,6 +1480,17 @@ static int self_test(void) {
     for (i = 0; i < SCHOOL_COUNT - 1; ++i) s[i].control = 100;
     if (strcmp(impact_rank(reputation_score(&g, s)), "TOTAL ANARCHY") != 0)
         return 33;
+    new_game(&g, 1, s);
+    g.debt = 500;
+    g.loan_visits_remaining = LOAN_GRACE_VISITS;
+    for (i = 0; i < LOAN_GRACE_VISITS; ++i) {
+        if (apply_loan_visit(&g) != 0 || g.health != 100) return 34;
+    }
+    if (g.loan_visits_remaining != 0 ||
+        apply_loan_visit(&g) != LOAN_OVERDUE_DAMAGE ||
+        g.health != 100 - LOAN_OVERDUE_DAMAGE) return 35;
+    g.debt = 0;
+    if (apply_loan_visit(&g) != 0 || g.loan_visits_remaining != 0) return 36;
     puts("self-test: PASS");
     return 0;
 }
@@ -1335,6 +1508,8 @@ int main(int argc, char **argv) {
     show_splash();
     while (!quit && game.day <= DAY_LIMIT && game.health > 0) {
         char command;
+        int bonus_location = game.location;
+        int bonus_before = schools[bonus_location].anarchy_sell_turns;
         const char *street_message = "";
         draw_dashboard(&game, schools);
         if (schools[game.location].riot >= 96)
@@ -1347,7 +1522,7 @@ int main(int argc, char **argv) {
         command = read_command(WHITE "                        Command: " RESET);
         switch (command) {
             case 'b': buy(&game, schools); break;
-            case 's': sell(&game); break;
+            case 's': sell(&game, schools); break;
             case 'v': bank(&game); break;
             case 'h': hospital(&game); break;
             case 'l': loan_shark(&game); break;
@@ -1358,6 +1533,8 @@ int main(int argc, char **argv) {
             case 'q': quit = 1; break;
             default: break;
         }
+        if (bonus_before > 0 && schools[bonus_location].anarchy_sell_turns == bonus_before)
+            --schools[bonus_location].anarchy_sell_turns;
         if (controlled_count(schools) == SCHOOL_COUNT - 1) {
             puts("You have thrown the entire Big Ten into anarchy. You WIN!!");
             break;

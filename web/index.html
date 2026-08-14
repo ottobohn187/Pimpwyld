@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07070b">
+  <meta name="description" content="Pimp Wyld 3.0 — a browser-playable Big Ten remake of the cult DOS-era strategy game.">
+  <title>Pimp Wyld 3.0 — Play in Your Browser</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="hero">
+    <nav><a class="brand" href="#top">PIMP WYLD <i>3.0</i></a><div><a href="#story">THE STORY</a><a href="#gallery">SCREENSHOTS</a><a href="#play">PLAY</a></div></nav>
+    <div class="hero-copy" id="top">
+      <p class="eyebrow">THE BIG TEN EDITION · 60 DAYS · 18 CAMPUSES</p>
+      <h1>Old-school chaos.<br><span>Rebuilt for today.</span></h1>
+      <p>A modern, playable expansion of the late-1990s DOS game—reconstructed from the original executable and remixed into a campus-spanning campaign.</p>
+      <div class="cta-row"><a class="button hot" href="#play">PLAY NOW</a><a class="button" href="downloads/PimpWyld30-Windows-x64.exe" download>WINDOWS DOWNLOAD</a></div>
+    </div>
+    <div class="scanlines" aria-hidden="true"></div>
+  </header>
+
+  <main>
+    <section id="story" class="story section">
+      <div><p class="eyebrow">FROM A 1999 EXECUTABLE</p><h2>A lost game,<br><span>found in the code.</span></h2></div>
+      <div class="story-copy"><p>Pimp Wyld began as a compact DOS-era trading and territory game. The original source disappeared, but the surviving PKLITE-packed Borland executable still held its rules, tables, menus, and attitude.</p><p>Version 3.0 is a clean-room reconstruction—not the lost source. It keeps the ten commodities, ten weapons, cash, bank, debt, health, travel, riots, and status systems, then expands them into a 60-day Big Ten campaign with turn-based combat, modern controls, and new events.</p><div class="stats"><b>10<small>MARKETS</small></b><b>18<small>CAMPUSES</small></b><b>60<small>DAYS</small></b></div></div>
+    </section>
+
+    <section id="gallery" class="section gallery"><p class="eyebrow">ACTUAL GAMEPLAY</p><h2>Neon streets. <span>Terminal battles.</span></h2><figure><img src="images/riot-combat.png" alt="Pimp Wyld 3.0 turn-based riot combat in a Windows terminal"><figcaption>RIOT COMBAT — command your three-person crew with keyboard or touch controls.</figcaption></figure></section>
+
+    <section id="play" class="section play-section">
+      <div class="play-head"><div><p class="eyebrow">BROWSER EDITION</p><h2>Run the campus.</h2></div><p>Buy low, sell high, travel, survive ambushes, manage debt, and push campuses into anarchy. Your game saves on this device.</p></div>
+      <div id="game" class="game-shell" tabindex="0" aria-label="Pimp Wyld browser game">
+        <div class="game-top"><b>PIMP WYLD <i>WEB</i></b><span id="dayLabel"></span><button id="resetBtn" class="tiny">NEW GAME</button></div>
+        <div class="dashboard">
+          <section class="panel market"><h3>MARKET</h3><div id="marketRows"></div></section>
+          <section class="panel status"><h3>CONDITIONS</h3><div id="statusRows"></div></section>
+        </div>
+        <div id="message" class="message" role="status"></div>
+        <div id="actions" class="actions"></div>
+      </div>
+      <p class="keys">KEYBOARD: B BUY · S SELL · D DRIVE · R RIOT · H HOSPITAL · L LOAN · ESC BACK</p>
+    </section>
+  </main>
+  <footer><b>PIMP WYLD 3.0</b><p>A clean-room reconstruction and expansion. Built for preservation, play, and a little anarchy.</p><a href="https://github.com/ottobohn187/Pimpwyld">SOURCE ON GITHUB ↗</a></footer>
+  <script src="game.js"></script>
+</body>
+</html>
