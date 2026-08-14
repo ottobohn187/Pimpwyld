@@ -1,0 +1,15 @@
+.story-copy aside {
+  margin: 30px 0;
+  padding: 20px;
+  border-left: 4px solid #ffe45c;
+  background: #ffe45c0b;
+  color: #d9d6c8;
+  font-size: 14px;
+}
+.story-copy aside b {
+  display: block;
+  color: #ffe45c;
+  font-family: Consolas, monospace;
+  margin-bottom: 7px;
+}
+.download-inline { display: inline-block; margin-top: 14px; }
