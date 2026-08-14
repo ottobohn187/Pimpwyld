@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory = $true)][string]$InputPath,
     [Parameter(Mandatory = $true)][string]$OutputPath,
     [Parameter(Mandatory = $true)][string]$FunctionName,
-    [int]$Width = 42,
+    [int]$Width = 34,
     [switch]$NeonTint,
     [switch]$AlleyBackground
 )
