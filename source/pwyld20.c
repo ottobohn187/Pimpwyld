@@ -187,6 +187,8 @@ static void event_art_row(const char *color, const char *content, int canvas_wid
 #include "ansi_scenes.inc"
 #include "coat_only.inc"
 #include "gun_dealer.inc"
+#include "lay_photo.inc"
+#include "boyfriend_alley.inc"
 
 static int read_key(void) {
     int ch;
@@ -489,25 +491,7 @@ static void show_mugging_art(void) {
 static void show_lay_art(void) {
     clear_screen();
     event_border(MAGENTA, "AFTER HOURS", 1);
-    event_art_row(BLUE,    "        . . . . . . . . . . . . . . . . . . . . . . . . . .  |||||", 78);
-    event_art_row(WHITE,   "                       .-''''-.       .-''''-.                |||||", 78);
-    event_art_row(CYAN,    "                     .'  _    '.   .'    _  '.              |||||", 78);
-    event_art_row(WHITE,   "                    /   / \\     \\_/     / \\   \\             |||||", 78);
-    event_art_row(MAGENTA, "                   |   |   '.   / \\   .'   |   |            |||||", 78);
-    event_art_row(RED,     "                   |   |     \\>/   \\</     |   |            |||||", 78);
-    event_art_row(WHITE,   "                    \\   \\    /\\___/\\    /   /             |||||", 78);
-    event_art_row(CYAN,    "                     '._ '._/  _  \\_.' _.'              |||||", 78);
-    event_art_row(MAGENTA, "                        '-./  / \\  \\.-'                 |||||", 78);
-    event_art_row(WHITE,   "                     ____/  /   \\  \\____                |||||", 78);
-    event_art_row(CYAN,    "                  .-'      /     \\      '-.             |||||", 78);
-    event_art_row(MAGENTA, "               __/    ____/       \\____    \\__          |||||", 78);
-    event_art_row(WHITE,   "              /  _.-''    \\       /    ''-._  \\         |||||", 78);
-    event_art_row(BLUE,    "             /.-'          \\     /          '-.\\        |||||", 78);
-    event_art_row(CYAN,    "            /   ___.--------\\___/--------.___   \\       |||||", 78);
-    event_art_row(MAGENTA, "           /_.-'       ____/     \\____       '-._\\      |||||", 78);
-    event_art_row(WHITE,   "          /       _.-''                 ''-._       \\     |||||", 78);
-    event_art_row(BLUE,    "         /__..--''        AFTER HOURS        ''--..__\\    |||||", 78);
-    event_art_row(RED,     "                         <3  <3  <3                       |||||", 78);
+    show_lay_photo_raster();
     event_row(YELLOW,      "CONDOM USED - STATUS +1");
     event_border(MAGENTA, "", 0);
 }
@@ -515,24 +499,7 @@ static void show_lay_art(void) {
 static void show_boyfriend_art(void) {
     clear_screen();
     event_border(RED, "ALLEY CONFRONTATION", 1);
-    event_art_row(BLUE,    "  |||||     / / / / / / / / / / / / / / / / / /       |||||", 78);
-    event_art_row(CYAN,    "  |||||                _________                          |||||", 78);
-    event_art_row(WHITE,   "  |||||              .'  _____  '.        ______________ |||||", 78);
-    event_art_row(YELLOW,  "  |||||             /   / > < \\   \\======|______________\\|||||", 78);
-    event_art_row(RED,     "  |||||            |    \\  ^  /    |               BAT   |||||", 78);
-    event_art_row(WHITE,   "  |||||             \\    '---'    /                     |||||", 78);
-    event_art_row(CYAN,    "  |||||              '.___|||___.'                      |||||", 78);
-    event_art_row(BLUE,    "  |||||                 __|||__                         |||||", 78);
-    event_art_row(WHITE,   "  |||||              .-'  |||  '-.____                  |||||", 78);
-    event_art_row(MAGENTA, "  |||||             / /|  |||  |\\    \\____             |||||", 78);
-    event_art_row(RED,     "  |||||            / / |  |||  | \\_______/-----> YOU!  |||||", 78);
-    event_art_row(WHITE,   "  |||||           /_/  |  |||  |                         |||||", 78);
-    event_art_row(CYAN,    "  |||||                |  |||  |                         |||||", 78);
-    event_art_row(BLUE,    "  |||||                |  / \\  |                         |||||", 78);
-    event_art_row(WHITE,   "  |||||                | /   \\ |                         |||||", 78);
-    event_art_row(CYAN,    "  |||||                |/     \\|                         |||||", 78);
-    event_art_row(WHITE,   "  |||||               _/       \\_                        |||||", 78);
-    event_art_row(BLUE,    "  |||||_____._____.___/___________\\___._____._____.______|||||", 78);
+    show_boyfriend_alley_raster();
     event_art_row(RED,     "                 WHO ARE YOU?  THIS ENDS NOW.", 78);
     event_row(WHITE,       "THE JEALOUS BOYFRIEND BLOCKS THE ALLEY");
     event_border(RED, "", 0);
