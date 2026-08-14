@@ -11,7 +11,9 @@ RewriteRule ^pimpwyld\.wasm$ game.dat [L]
 <Files "engine.dat">
   ForceType application/javascript
   Header set Content-Encoding gzip
+  Header set Cache-Control "no-cache, must-revalidate"
 </Files>
 <Files "game.dat">
   ForceType application/wasm
+  Header set Cache-Control "no-cache, must-revalidate"
 </Files>
