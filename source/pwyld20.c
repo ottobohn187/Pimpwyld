@@ -99,8 +99,10 @@ static char normalize_key(int ch) {
 }
 
 static void enable_dos_console(void) {
+#ifdef __EMSCRIPTEN__
+    interactive_terminal = 0;
+#elif defined(_WIN32)
     interactive_terminal =
-#ifdef _WIN32
         _isatty(_fileno(stdin));
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleTitleA("Pimp Wyld 3.0");
@@ -111,6 +113,7 @@ static void enable_dos_console(void) {
             SetConsoleMode(output, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
     }
 #else
+    interactive_terminal =
         isatty(STDIN_FILENO);
 #endif
 }
