@@ -11,6 +11,10 @@
 #include <string.h>
 #include <time.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #ifdef _WIN32
 #include <conio.h>
 #include <io.h>
@@ -177,6 +181,9 @@ static void event_art_row(const char *color, const char *content, int canvas_wid
 
 static int read_key(void) {
     int ch;
+#ifdef __EMSCRIPTEN__
+    emscripten_sleep(1);
+#endif
     if (!interactive_terminal) return getchar();
 #ifdef _WIN32
     ch = _getch();
@@ -392,6 +399,9 @@ static int read_int(const char *prompt) {
     printf("%s", prompt);
     fflush(stdout);
     for (;;) {
+#ifdef __EMSCRIPTEN__
+        emscripten_sleep(1);
+#endif
         if (!fgets(line, sizeof(line), stdin)) return 0;
         value = strtol(line, &end, 10);
         if (end != line) return (int)value;

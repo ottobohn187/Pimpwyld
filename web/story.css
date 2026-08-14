@@ -13,3 +13,12 @@
   margin-bottom: 7px;
 }
 .download-inline { display: inline-block; margin-top: 14px; }
+.mirror-frame {
+  width: 100%;
+  min-height: 820px;
+  margin-top: 45px;
+  border: 1px solid #384052;
+  background: #050609;
+  box-shadow: 0 0 60px #48e7ea12;
+}
+@media (max-width: 650px) { .mirror-frame { min-height: 680px; } }

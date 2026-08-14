@@ -14,7 +14,11 @@ test: pwyld20
 windows: pwyld20.c ansi_scenes.inc coat_only.inc gun_dealer.inc
 	$(WINDOWS_CC) $(CFLAGS) -static -Wl,--subsystem,console -o $(WINDOWS_EXE) $< -lm
 
+web: pwyld20.c ansi_scenes.inc coat_only.inc gun_dealer.inc
+	emcc $(CFLAGS) -sASYNCIFY -sALLOW_MEMORY_GROWTH -sENVIRONMENT=web \
+		-sEXIT_RUNTIME=1 --pre-js ../web/mirror-pre.js -o ../web/pimpwyld.js $< -lm
+
 clean:
 	rm -f pwyld20 $(WINDOWS_EXE)
 
-.PHONY: all test windows clean
+.PHONY: all test windows web clean

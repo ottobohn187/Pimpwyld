@@ -8,3 +8,4 @@ source/*.o
 Thumbs.db
 .vscode/
 .idea/
+.tools/
