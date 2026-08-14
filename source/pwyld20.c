@@ -13,6 +13,12 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+EM_ASYNC_JS(int, browser_read_key, (), {
+    return await window.PimpInput.readKey();
+});
+EM_ASYNC_JS(int, browser_read_number, (const char *prompt), {
+    return await window.PimpInput.readNumber(UTF8ToString(prompt));
+});
 #endif
 
 #ifdef _WIN32
@@ -182,7 +188,7 @@ static void event_art_row(const char *color, const char *content, int canvas_wid
 static int read_key(void) {
     int ch;
 #ifdef __EMSCRIPTEN__
-    emscripten_sleep(1);
+    return browser_read_key();
 #endif
     if (!interactive_terminal) return getchar();
 #ifdef _WIN32
@@ -393,15 +399,15 @@ static int purchase_lay(Game *g, School *school) {
 }
 
 static int read_int(const char *prompt) {
+#ifdef __EMSCRIPTEN__
+    return browser_read_number(prompt);
+#else
     char line[80];
     long value;
     char *end;
     printf("%s", prompt);
     fflush(stdout);
     for (;;) {
-#ifdef __EMSCRIPTEN__
-        emscripten_sleep(1);
-#endif
         if (!fgets(line, sizeof(line), stdin)) return 0;
         value = strtol(line, &end, 10);
         if (end != line) return (int)value;
@@ -412,6 +418,7 @@ static int read_int(const char *prompt) {
         printf("%s", prompt);
         fflush(stdout);
     }
+#endif
 }
 
 static char read_command(const char *prompt) {
@@ -420,7 +427,11 @@ static char read_command(const char *prompt) {
     fflush(stdout);
     do { ch = read_key(); } while (ch == '\n' || ch == '\r');
     if (ch == EOF) return 'q';
-    if (!interactive_terminal) {
+    if (!interactive_terminal
+#ifdef __EMSCRIPTEN__
+        && 0
+#endif
+    ) {
         int rest;
         do { rest = getchar(); } while (rest != '\n' && rest != EOF);
     }
