@@ -5,3 +5,13 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 <IfModule mod_headers.c>
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>
+
+RewriteRule ^pimpwyld\.js$ engine.dat [L]
+RewriteRule ^pimpwyld\.wasm$ game.dat [L]
+<Files "engine.dat">
+  ForceType application/javascript
+  Header set Content-Encoding gzip
+</Files>
+<Files "game.dat">
+  ForceType application/wasm
+</Files>
