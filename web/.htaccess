@@ -6,9 +6,17 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>
 
-RewriteRule ^pimpwyld\.js$ engine.dat [L]
 RewriteRule ^pimpwyld\.wasm$ game.dat [L]
 <Files "engine.dat">
+  ForceType application/javascript
+  Header set Content-Encoding gzip
+  Header set Cache-Control "no-cache, must-revalidate"
+</Files>
+<Files "engine.b64">
+  ForceType text/plain
+  Header set Cache-Control "no-cache, must-revalidate"
+</Files>
+<Files "e02.dat">
   ForceType application/javascript
   Header set Content-Encoding gzip
   Header set Cache-Control "no-cache, must-revalidate"
